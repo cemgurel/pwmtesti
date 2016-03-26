@@ -1,0 +1,205 @@
+const int sharp1 = A0;  // Analog input pin that the potentiometer is attached to
+const int sharp2 = A1; // sensörleri alıyor
+const int sharp3 = A2;  
+int m1i =10;        // motor sürücüye bağlanacak pinler 
+int m1g =11;
+int m2i= 6;
+int m2g=5;
+int sensorValue = 0;
+int outputValue = 0; 
+//int sensorValue2 = 0;
+//int outputValue2 = 0; 
+int pwm;
+#define proxim 2
+int prox;
+int state = 0;
+int SENSOR1;
+int SENSOR2;
+int SENSOR3;
+int c;
+
+
+
+
+
+
+//MOTOR SURUCU///////////////////////////////////////
+
+    void m1F(int pwm){
+      analogWrite(m1i, pwm);  // m1i pinine pwm değerini analog olarak at 
+      analogWrite(m1g, 0);
+                  }
+    void m1R(int pwm){
+      analogWrite(m1i, 0);
+      analogWrite(m1g, pwm);
+                  }
+    void m2F(int pwm){
+      analogWrite(m2i, pwm);
+      analogWrite(m2g,0);
+                 }
+    void m2R(int pwm){
+      analogWrite(m2i,0 );
+      analogWrite(m2g,pwm);
+                 }
+                 
+ ///MOTOR SURUCU/////////////////////////////////
+ 
+ 
+ 
+ ///SHARP SENSOR1////////////////////////////////////////// 
+int distance(int type){  // sensor data alıyor senlik bişey yok
+  switch(type){
+    case 1:
+      sensorValue = analogRead(sharp1); 
+      break;
+    case 2:
+      sensorValue = analogRead(sharp2); 
+      break;
+    case 3:
+      sensorValue = analogRead(sharp3); 
+      break;
+  }
+  outputValue = (6787/(sensorValue-3))-4;      
+  if(outputValue<0||outputValue>50) {outputValue=60;}
+  return outputValue;
+}  
+
+void setup() {
+  Serial.begin(9600); 
+}
+  
+
+void loop() {   // asıl program buradan başlıyor
+  if(state == 0)// önce çöp buluyor 
+  {
+    BoxFinding();
+  }
+  else if(state == 1) 
+  {
+    //çöpü yakalama fonksiyonu gelecek
+    delay(5000);
+    state = 2;
+  }
+  else if(state == 2)
+  {
+    Align();  // duvara gitme
+    delay(100);
+  }
+  else if(state == 10)
+    return;  
+    
+}  // bu loop sürekli dönecek
+
+
+
+
+void BoxFinding()
+{
+  SENSOR3 = distance(3);
+  if(SENSOR3 > 45 && SENSOR3 < 90)
+  {
+    m2F(40);
+    m1R(40);
+  }
+  else if(SENSOR3 < 45 && SENSOR3 > 10)
+  {
+    int pwm1;
+    int pwm2;
+    pwm1 = 30;
+    pwm2 = pwm1+5;
+    m1F(pwm1);
+    m2F(pwm2);
+  }
+  else if(SENSOR3 < 10 && SENSOR3 > 0)
+  {
+    m1F(0);
+    m2F(0);
+    delay(200);
+    m1F(40);
+    m2F(40);
+    delay(300);
+    m1F(0);
+    m2F(0);
+    state = 1;
+  }
+   
+}
+
+
+
+void LastAlignment()
+{
+  SENSOR1 = distance(1);
+  SENSOR2 = distance(2);
+  c = SENSOR1 - SENSOR2;
+  if(c < -1)
+  {
+    m2F(40);
+  }
+  else if(c > 1)
+  {
+    m1F(40);
+  }
+    delay(500);
+    m1F(50);
+    m2F(50);
+    delay(300);
+    m1F(0);
+    m2F(0);
+}
+void Align()
+{
+   SENSOR1 = distance(1);
+   SENSOR2 = distance(2);
+   c = SENSOR1 - SENSOR2;
+  if(SENSOR1<10 && SENSOR2<10)
+      {
+        m1F(0);
+        m2F(0);
+        LastAlignment();
+        state = 10;
+        return;
+      }
+  if(SENSOR1>50 && SENSOR2>50)
+      {
+        m2F(40);
+        m1R(40);
+        return;
+      }
+    
+      while(c < -1)
+      {
+      SENSOR1=distance(1);
+      SENSOR2=distance(2);
+      c=SENSOR1-SENSOR2; 
+       m2F(40);
+       m1R(40);
+      // Serial.println("while2222  ");
+      }
+      SENSOR1=distance(1);
+      SENSOR2=distance(2);
+      c=SENSOR1-SENSOR2; 
+      
+      while(c > 1)
+      {
+      SENSOR1=distance(1);
+      SENSOR2=distance(2);
+      c=SENSOR1-SENSOR2; 
+       m1F(40);
+       m2R(40);
+     //  Serial.println("while333333  ");
+      }
+      m1F(50);
+      m2F(50);
+     
+      // Serial.println("exit  ");
+}
+
+
+         
+                
+
+
+
+           
+ 
