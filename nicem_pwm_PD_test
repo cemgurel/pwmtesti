@@ -1,0 +1,57 @@
+#include<stdio.h>
+#include<conio.h>
+#include<math.h>
+#include<iostream>
+#include <fstream>
+using namespace std;
+
+
+
+int main(){ofstream out_data("acg.txt");
+	ofstream out_data2("acg2.txt");
+
+	double s1,s2,ts1,ts2,tsnext1,tsnext2,pwma,pwmb,time,dilim,err,aerr,nexterr;
+	
+	
+	ts1=45; ts2=40; // sensorlerin okuduğu başlangıç değerleri
+	time=0;
+	dilim=0.01; // discrete zaman aralıkları, her bir process kaç sn sürecek ( türev gibi)
+	nexterr=5;
+	pwma=100; pwmb=100;
+	int a0=0 ;int a1=0;
+	for(int i; i<100 || pwma>10 && pwmb>10 ; i++){ // motora gönderdiğim 10/256 nın altındaysa program bitiyor
+		time=time+dilim; cout<<"\t time: "<<time;       // cout = printf
+		
+		
+		s1=ts1+tsnext1; cout<<"\t new s1: "<<s1;  //sensor 1 in okuduğu değer (bulunduğun 0.01 sn lik zaman içerisinde)
+		s2=ts2+tsnext2; cout<<" \t new s2: "<<s2<<endl;
+		ts1=0; ts2=0;
+		
+		
+		err=s1-s2; 
+		aerr=abs(err);cout<<"\t error: "<<err;   //err error, a err da absolute value
+		pwma=sqrt(abs(10-s1))*23+err*10+200*(nexterr-err);  cout<<"\t pwma: "<<pwma; //bu formül kaç pwm vermemiz gerektiğni hesaplıyor kök(|10-sensor1|)*23+10*error+200*(önceki error ile şu anki error farkı)
+		pwmb=sqrt(abs(10-s2))*23+err*10+200*(nexterr-err); cout<<"\t pwmb: "<<pwmb<<endl;  /// 
+		
+		nexterr=err;
+		//if(pwma>10 && pwmb>10)
+		{
+		
+		tsnext1=s1-pwma*0.25*dilim;// hesaplarıma göre 1/256 pwm verdiğimizde 1 saniyede 0.25cm ilerliyor. 0.01sn de pwma*0.25*0.01 kadar ilerler bunu da sensörün önceki değerinden çıkarırız
+		tsnext2=s2-pwmb*0.25*dilim;
+		
+			//out_data <<"s1["<<a0<<"]="<<s1<<"; s2["<<a1<<"]="<<s2<<";"<<endl;
+			
+		//	out_data<<s1<<"\t"<<s2<<endl;
+		out_data<<pwma<<endl;// bunlar text e yazıyor 
+		out_data2<<pwmb<<endl;
+		
+		a0++;a1++;
+	}
+		
+	}
+	
+	return 0;
+
+}
+
